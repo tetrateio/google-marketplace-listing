@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tsb-billing
+  labels:
+    app.kubernetes.io/name: tsb-billing
+    app.kubernetes.io/component: ubbagent-configmap
+data:
+  config.yaml: |-
+    identities:
+    - name: gcp
+      gcp:
+          # A base64-encoded service account key used to report usage to
+          # Google Service Control.
+          encodedServiceAccountKey: $AGENT_ENCODED_KEY
+    metrics:
+    - name: num_management_planes
+      type: int
+      endpoints:
+      - name: servicecontrol
+      aggregation:
+        bufferSeconds: 360
+    endpoints:
+    - name: servicecontrol
+      servicecontrol:
+        identity: gcp
+        # Find this from Google during onboarding
+        serviceName: tsb.mp-tetrate-public.appspot.com
+        consumerId: $AGENT_CONSUMER_ID

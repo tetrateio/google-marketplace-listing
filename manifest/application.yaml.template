@@ -1,0 +1,30 @@
+apiVersion: app.k8s.io/v1beta1
+kind: Application 
+metadata:
+  name: "$name"
+  namespace: "$namespace"
+  annotations:
+    kubernetes-engine.cloud.google.com/icon: data:image/png;base64,{{ .Files.Get "logo.png" | b64enc | trim }}
+    marketplace.cloud.google.com/deploy-info: '{"partner_id": "tetrate-public", "product_id": "tsb", "partner_name": "Tetrate"}'
+  labels:
+    app.kubernetes.io/name: "$name"
+spec:
+  descriptor:
+    type: Tetrate Service Bridge
+    version: 1.3.0
+    description: |-
+      Tetrate Service Bridge makes it easy to deploy and manage Istio on Kubernetes.
+    maintainers:
+    - name: Tetrate
+      url: https://tetrate.io
+    links:
+    - description: 'User Guide: Tetris'
+      url: https://support.tetris.io
+    notes: |-
+      See more details and manual installation instructions here https://github.com/tetrate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "$name"
+  componentKinds:
+  - group: v1
+    kind: Pod

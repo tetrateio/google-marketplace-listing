@@ -1,0 +1,8 @@
+properties:
+  testerImage:
+    type: string
+    default: $REGISTRY/tester:$TAG
+  tctlRepo:
+    type: string
+    default: $REGISTRY
+

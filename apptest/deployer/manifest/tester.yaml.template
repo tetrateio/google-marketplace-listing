@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "${NAME}-tester"
+  labels:
+    app.kubernetes.io/name: "${NAME}"
+  annotations:
+    marketplace.cloud.google.com/verification: test
+spec:
+  serviceAccountName: ${service_account}
+  containers:
+  - name: tester
+    image: "${testerImage}"
+    env:
+    - name: REPO
+      value: $tctlRepo
+  restartPolicy: Never

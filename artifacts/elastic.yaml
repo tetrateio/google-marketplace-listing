@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: elastic
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: tsb
+  namespace: elastic
+spec:
+  version: 7.10.0
+  http:
+    service:
+      spec:
+        type: LoadBalancer
+  nodeSets:
+    - name: master
+      count: 1
+      config:
+        node.master: true
+        node.data: false
+        node.ingest: false
+      podTemplate:
+        spec:
+          containers:
+          - name: elasticsearch
+            env:
+              - name: ES_JAVA_OPTS
+                value: -Xmx4g -Xms4g
+            resources:
+              limits:
+                memory: 6Gi
+          initContainers:
+          - name: set-max-map-count
+            command:
+              - sh
+              - -c
+              - sysctl -w vm.max_map_count=262144
+            resources: {}
+            securityContext:
+              privileged: true
+    - name: data
+      count: 2
+      config:
+        node.master: false
+        node.data: true
+        node.ingest: true
+      podTemplate:
+        spec:
+          containers:
+          - env:
+              - name: ES_JAVA_OPTS
+                value: -Xmx4g -Xms4g
+            name: elasticsearch
+            resources:
+              limits:
+                memory: 6Gi
+          initContainers:
+          - command:
+              - sh
+              - -c
+              - sysctl -w vm.max_map_count=262144
+            name: set-max-map-count
+            resources: {}
+            securityContext:
+              privileged: true
+      volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 100Gi
+---
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: tsb
+  namespace: elastic
+spec:
+  version: 7.10.0
+  count: 1
+  elasticsearchRef:
+    name: tsb
+  http:
+    service:
+      spec:
+        type: LoadBalancer

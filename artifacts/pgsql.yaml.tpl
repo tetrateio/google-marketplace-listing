@@ -1,0 +1,22 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: acid-minimal-cluster
+  namespace: default
+spec:
+  teamId: "acid"
+  volume:
+    size: 10Gi
+    storageClass: #SC#
+  numberOfInstances: 1
+  users:
+    zalando: # database owner
+    - superuser
+    - createdb
+    tsb_user: [] # role for application foo
+  databases:
+    my_tsb: tsb_user # dbname: owner
+  preparedDatabases:
+    bar: {}
+  postgresql:
+    version: "12"

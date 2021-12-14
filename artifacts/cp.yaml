@@ -1,0 +1,18 @@
+apiVersion: install.tetrate.io/v1alpha1
+kind: ControlPlane
+metadata:
+  name: controlplane
+  namespace: istio-system
+spec:
+  hub: gcr.io/gke-istio-test-psb
+  telemetryStore:
+    elastic:
+      host: tsb-es-http.elastic.svc
+      port: 9200
+      version: 7
+      selfSigned: true
+  managementPlane:
+    host: 34.69.30.23
+    port: 8443
+    clusterName: cluster-2
+  meshExpansion: {}

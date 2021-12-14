@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tsb-installer
+  namespace: tsb
+spec:
+  serviceAccountName: $service_account
+  containers:
+  - name: tsb-installer
+    image: $tsbImageRepo/deployer:$tsbImageTag
+    imagePullPolicy: IfNotPresent
+    command: ['sh', '-c', '--']
+    args:
+      - |
+        export REPO=$tsbImageRepo
+        export TAG=$tsbImageTag
+        export NAMESPACE=$namespace
+        export REPORTING_SECRET=$reportingSecret
+        echo ">>>1 Expand artifact templates with $REPO $TAG"
+        envsubst '$REPO $TAG' < /data/artifacts/operator.templt > /data/artifacts/operator.yaml
+        envsubst '$REPO $TAG' < /data/artifacts/cert-manager.templt > /data/artifacts/cert-manager.yaml
+        envsubst '$REPO $TAG' < /data/artifacts/configmap.templt > /data/artifacts/configmap.yaml
+        envsubst '$REPO $TAG' < /data/artifacts/postgres-operator.templt > /data/artifacts/postgres-operator.yaml
+        envsubst '$NAMESPACE' < /data/artifacts/operator-service-account-rbac.templt > /data/artifacts/operator-service-account-rbac.yaml
+        envsubst '$REPO $TAG' < /data/artifacts/tsbcp-deploy.templt > /data/artifacts/tsbcp-deploy.yaml
+        envsubst '$REPO $TAG $REPORTING_SECRET' < /data/artifacts/tsbmp-deployment.templt > /data/artifacts/tsbmp-deployment.yaml
+        echo ">>>2 Installing Cert Manager"
+        kubectl apply -f /data/artifacts/cert-manager.yaml
+        kubectl wait pods --for condition=ready -n cert-manager --all --timeout=120s
+        sleep 20
+        echo ">>>3 Installing Postgres Operator"
+        kubectl apply -f /data/artifacts/configmap.yaml
+        kubectl apply -f /data/artifacts/operator-service-account-rbac.yaml
+        kubectl apply -f /data/artifacts/postgres-operator.yaml
+        kubectl apply -f /data/artifacts/api-service.yaml
+        sleep 20
+        sed  "s%#SC#%standard%g" /data/artifacts/pgsql.yaml.tpl > /data/artifacts/pgsql.yaml 
+        kubectl apply -f /data/artifacts/pgsql.yaml
+        sleep 15
+        export PG_PASS=$(kubectl get secret -n default tsb-user.acid-minimal-cluster.credentials -o go-template='{{ .data.password | base64decode }}')
+        echo "PG_PASS=" $PG_PASS
+        echo ">>>4 Installing ElasticSearch"
+        kubectl apply -f /data/artifacts/crds.yaml
+        kubectl apply -f /data/artifacts/operator.yaml
+        sleep 10
+        kubectl -n elastic-system wait --for condition=ready --timeout=120s pod/elastic-operator-0
+        sleep 15
+        kubectl apply -f /data/artifacts/elastic.yaml
+        sleep 20
+        printf "Waiting for elastic-pods  to become ready "
+        while ! kubectl wait pod -n elastic  --for condition=ready --timeout=60s --all; do
+          echo "waiting for elasticsearch!"
+          sleep 2
+        done
+        export ELASTIC_PASS=$(kubectl get secret -n elastic tsb-es-elastic-user -o go-template='{{ .data.elastic | base64decode }}')
+        kubectl get secret -n elastic tsb-es-http-certs-public -o go-template='{{ index .data "ca.crt" | base64decode}}' > /data/artifacts/es-ca-cert.pem
+
+        #install mp operator
+        tctl install manifest management-plane-operator --registry $REPO | kubectl apply -f -
+        sleep 5
+        export REPO=`echo $REPO | sed 's/\/tsb-operator//g'`
+        kubectl wait pods --for condition=ready -n tsb --all --timeout=120s
+        tctl install manifest management-plane-secrets --tsb-admin-password admin --tsb-server-certificate "$(cat /data/artifacts/dummy.cert.pem)" --tsb-server-key "$(cat /data/artifacts/dummy.key.pem)" --postgres-username tsb_user --postgres-password $PG_PASS  --elastic-username elastic --elastic-password $ELASTIC_PASS --allow-defaults --elastic-ca-certificate "$(cat /data/artifacts/es-ca-cert.pem)" --xcp-certs > /data/artifacts/mpsecrets.yaml
+        sleep 3
+        kubectl apply -f /data/artifacts/mpsecrets.yaml
+        sleep 20
+        sed  "s%#HUB#%${REPO}%g" /data/artifacts/mgp.yaml.tpl > /data/artifacts/mgp.yaml
+        kubectl apply -f /data/artifacts/mgp.yaml
+        sleep 20
+        for i in `kubectl get pods -n tsb | grep -i teamsync | awk {'print $1'}`;do kubectl delete pod -n tsb  $i;sleep 4;done
+        sleep 20
+        kubectl wait pods --for condition=ready -n tsb --all --timeout=120s 
+        sleep 15
+        kubectl create job -n tsb teamsync-bootstrap --from=cronjob/teamsync
+        kubectl wait --for=condition=complete job/teamsync-bootstrap -n tsb
+        MP_ADDRESS=$(kubectl get svc -n tsb envoy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        echo -e "Management Plane created successfully. \n address: ${MP_ADDRESS} \n user: admin \n password: $tsb_password"
+        sleep 10
+
+        MP_ADDRESS=$(kubectl get svc -n tsb envoy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        export ELASTIC_PASS=$(kubectl get secret -n elastic tsb-es-elastic-user -o go-template='{{ .data.elastic | base64decode }}')
+        tctl config clusters set $mp_cluster --bridge-address ${MP_ADDRESS}:8443 
+
+        tctl config profiles set $mp_cluster --cluster $mp_cluster
+
+        tctl config profiles  set-current $mp_cluster
+
+        TCTL_LOGIN_ORG=tetrate TCTL_LOGIN_TENANT=tetrate TCTL_LOGIN_USERNAME=admin TCTL_LOGIN_PASSWORD=${tsb_password} tctl login
+
+        sed "s%#CP_CLUSTER#%${cluster_name}%g" /data/artifacts/cp-cluster.yaml.tpl > /data/artifacts/cp-cluster.yaml
+
+        tctl apply -f /data/artifacts/cp-cluster.yaml
+
+        tctl install manifest cluster-operators --registry $REPO | kubectl apply -f -
+
+        tctl install manifest control-plane-secrets  --allow-defaults  --elastic-password $ELASTIC_PASS --elastic-username elastic  --elastic-ca-certificate "$(cat /data/artifacts/es-ca-cert.pem)" --cluster $cluster_name --xcp-certs "$(tctl install cluster-certs --cluster $cluster_name)" | kubectl apply -f -
+
+        if kubectl create secret generic cacerts -n istio-system --from-file /data/artifacts/ca-cert.pem --from-file /data/artifacts/ca-key.pem --from-file /data/artifacts/root-cert.pem --from-file /data/artifacts/cert-chain.pem;then
+          echo "cacerts  installed"
+        fi
+        sed "s%#HUB#%${REPO}%g;s%#MP_HOST#%${MP_ADDRESS}%g;s%#CP_CLUSTER#%${cluster_name}%g" /data/artifacts/cp.yaml.tpl > /data/artifacts/cp.yaml
+        sleep 40
+        kubectl apply -f /data/artifacts/cp.yaml
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 0

@@ -1,0 +1,312 @@
+INFO: /data/schema.yaml:
+x-google-marketplace:
+  schemaVersion: v2
+
+  applicationApiVersion: v1beta1
+  # The published version is required and MUST match the tag
+  # of the deployer image
+  publishedVersion: '1.3.0'
+  publishedVersionMetadata:
+    releaseNote: >-
+      A first release.
+  images:
+    '':
+      properties:
+        tsbImageRepo:
+          type: REPO_WITH_REGISTRY
+        tsbImageTag:
+          type: TAG
+    eck-operator:
+      properties:
+        eckImageRepo:
+          type: REPO_WITH_REGISTRY
+        eckImageTag:
+          type: TAG
+    tctl:
+      properties:
+        tctlImageRepo:
+          type: REPO_WITH_REGISTRY
+        tctlImageTag:
+          type: TAG
+    postgres-operator:
+      properties:
+        pgoperatorImageRepo:
+          type: REPO_WITH_REGISTRY
+        pgoperatorImageTag:
+          type: TAG
+    spilo-13:
+      properties:
+        spiloImageRepo:
+          type: REPO_WITH_REGISTRY
+        spiloImageTag:
+          type: TAG
+    elasticsearch:
+      properties:
+        esImageRepo:
+          type: REPO_WITH_REGISTRY
+        esImageTag:
+          type: TAG
+    cert-manager-cainjector:
+      properties:
+        cminjectorImageRepo:
+          type: REPO_WITH_REGISTRY
+        cminjectorImageTag:
+          type: TAG
+    cert-manager-controller:
+      properties:
+        cmcontrollerImageRepo:
+          type: REPO_WITH_REGISTRY
+        cmcontrollerImageTag:
+          type: TAG
+    cert-manager-webhook:
+      properties:
+        cmwebhookImageRepo:
+          type: REPO_WITH_REGISTRY
+        cmwebhookImageTag:
+          type: TAG
+properties:
+  name:
+    type: string
+    default: "tsb"
+    x-google-marketplace:
+      type: NAME
+  namespace:
+    type: string
+    x-google-marketplace:
+      type: NAMESPACE
+  reportingSecret:
+    type: string
+    x-google-marketplace:
+      type: REPORTING_SECRET
+  tsb_password:
+    type: string
+    x-google-marketplace:
+      type: MASKED_FIELD
+  cluster_name:
+    type: string
+    default: "cluster-2"
+    x-google-marketplace:
+      type: STRING
+  mp_cluster:
+    type: string
+    default: "management-plane"
+    x-google-marketplace:
+      type: STRING
+  zone:
+    type: string
+    default: "us-central1-c"
+    x-google-marketplace:
+      type: STRING
+  project:
+    type: string
+    default: "gke-istio-test-psb"
+    x-google-marketplace:
+      type: STRING
+  service_account:
+    title: Cluster Admin Service Account
+    type: string
+    x-google-marketplace:
+      type: SERVICE_ACCOUNT
+      serviceAccount:
+        description: "Name of a service account in the target namespace that has cluster-admin permissions. This is needed for the operator to create Tetrate Service Bridge and resources."
+        roles:
+        - type: ClusterRole
+          rulesType: PREDEFINED
+          rulesFromRoleName: cluster-admin
+required:
+- name
+- namespace
+- tsb_password
+- service_account
+Using /opt/kubectl/default/kubectl (server=1.21)
+Using /opt/kubectl/default/kubectl (server=1.21)
+application.app.k8s.io/tsb created
+Using /opt/kubectl/default/kubectl (server=1.21)
+Using /opt/kubectl/default/kubectl (server=1.21)
+serviceaccount/tsb-deployer-sa created
+Using /opt/kubectl/default/kubectl (server=1.21)
+INFO Application 'tsb' owns 'Secret/tsb-reportingsecret'
+INFO Application 'tsb' owns 'ServiceAccount/tsb-serviceaccount'
+INFO Application 'tsb' does not own cluster-scoped 'ClusterRoleBinding/tsb:tsb:service_account:cluster-admin-crb'
+INFO Application 'tsb' owns 'ServiceAccount/tsb-deployer-sa'
+INFO Application 'tsb' owns 'Secret/tsb-deployer-config'
+INFO Application 'tsb' owns 'Job/tsb-deployer'
+INFO Application 'tsb' owns 'RoleBinding/tsb-deployer-rb'
+INFO: Applying the following manifests:
+apiVersion: v1
+data:
+  consumer-id: cHJvamVjdDpwci14eHh4LWZha2UteHh4eA==
+  entitlement-id: ZmZmZmZmZmYtZmZmZi1mZmZmLWZmZmYtZmZmZmZmZmZmZmZm
+  reporting-key: ZXdvZ0lDSjBlWEJsSWpvZ0luTmxjblpwWTJWZllXTmpiM1Z1ZENJc0NpQWdJbkJ5YjJwbFkzUmZhV1FpT2lBaVkyeHZkV1F0YldGeWEyVjBjR3hoWTJVdGRHOXZiSE1pTEFvZ0lDSndjbWwyWVhSbFgydGxlVjlwWkNJNklDSm1OR1ppTUdRMk16TmhaRFEzWWpFd1pUSmhORFJqTTJaak1HWmlZakEzTlRrNE56Z3lZMkpqSWl3S0lDQWljSEpwZG1GMFpWOXJaWGtpT2lBaUxTMHRMUzFDUlVkSlRpQlFVa2xXUVZSRklFdEZXUzB0TFMwdFhHNU5TVWxGZGtGSlFrRkVRVTVDWjJ0eGFHdHBSemwzTUVKQlVVVkdRVUZUUTBKTFdYZG5aMU5wUVdkRlFVRnZTVUpCVVVONk1HOWlWbXh0VmpBNE1GVm9YRzV1WTNoMGQyZHlUVTFKTm1kMEsyTmhObFJxZGs0dmJrNW5hREZ1ZGsxVU1YUjBObnB0WWpaQ01HSTBTazF2V0V4SE4ycGpMM0Y1T1dKTGEwdERPRkEyWEc1bFdESmpXbkExWkVoT1VsQkZVRXhVWXpGV1RuQldZM0JQTm1ReFVYUnNWbTlOWVdVelZtTXlNbEYzTXpCQ2FsTkhTMU12V0U5V2IyUnNUeXRRTHpZM1hHNXhNMUZhVDNwWmJqRTRNakEyT0ZkM0wwVmxUM0UzWW1GdlQzQmllVlJEUlZRMlJUY3JPRzhyYVUxRVQxSklaVzVyTVRSck1rWjZSMjR6SzJOcU9VWklYRzVUTkhGQ0wxZFNLelF4Wm01bE5XOTFOVTVKU1hFMGFXVllWV2RsTnpaNk9GWXhaRE4xZFdGNWNGaGhZME50VEN0TVpGVnlZWFkxYjBSSU4zbEVTVUo2WEc1TWFHRkdTMjlsU0dKNlJGcFRkR2RTYVVKcFZqWkZielpoVFd4dU4wTndUR3hxYlZOUGRHb3JiVk5TYkhZemRFVTJibFU1TjFacU9FcHRhV05DUTNwV1hHNUpkRGx1TkhSelNFRm5UVUpCUVVWRFoyZEZRVUpTYm5Gd05rbHdlRVpKVW5WMFNUbEJUMWxhWlZaRldDOVhUMHRNYkZSQ2RpdFBUR1JvTWtRdmJEWk9YRzVaU1VwemRXVnhXbVJ6VWxVNVducFdlbE5sTDBGaFNIZHJOQzlEZGtsblRqWm5kakZSTTBWVU1FRlRPVXg1UW1Ka1l6QnlPVk53ZG1KdFZHRkJUWEJ6WEc1b2ExaFhaMlpQVUV4R1MyMDVWRGhMTTFSaWRYZFpXbFJUWW1sR2JsWkhUa2R3VkZOMmJqVXJjMFV5Y1dOU1dEVk1aV0Z1YkVaeE0wTkNTbXhxYTFOc1hHNWFZMDhyVW5ORVVqUlFOREJGVVdVd2FXUXhhek5UWVc5Sk1IUkJTMHRhTkdOQ2JHUmhTMUpCVkZSWE5IQnpOa2R2U0c5eU9WSTJOREJZWTFaUlN6bFdYRzVsVGxKUGFtTXdUbWx0Um5sS1VXWlVTMk5YYVV4SU1WaGlRVFJVUTI5R1YwaE9kVU5sTDJoV1VWUlNWbkpTT1hWb01YVlVTbkI1VUc0MFFrTXpabnBTWEc1TmRIRnlOWGxoVEc1eWJUTXlZMFFyYjBZclZuWllOMUpsVm10TVpuWk1TazVEVlVSVE9FRjFjVkZMUW1kUlJEQTROMlJIVUZKaFRXSkdPVVY1Ym1WcVhHNDVTM1JxU2xOQmNsaHpZbUp3YmxKUVJ6bFNhMEZVU1RsR2FYQnRURnBhY3pSVGFEYzVPV2RZTlZkUE5YUlZObGRCWVZWcVRVUjFNM3B6VEdaQ05DdFBYRzVOTkU5TVFtbDBMM2t3VnpGQlpsTTBUVVkyVG1wbWNFbGFTVWxzT1drMVowSkxVbkJGUVhCMGRtVnRTVzlHWkZsUlkweFRiMkYwU0ZKbGNIQmxOMmxpWEc1aU1IRm5ZaTlVVm5ORllYaGhaMUIyS3poSU4zcEVjVVpYVVV0Q1oxRkROemR6TlVnMFVqTjFXRFJVUzNKUk9XVTBTVkZOTm05cVVFSXhRazlFV0cxalhHNXJlVEpDVUc1TGNsTkJiMWN5Y2xsWlJYcG5OWHBGUW1weWVuZHNPVTFuSzBsaFFYVnViUzl5ZEVORlowbzJTMlpLVlhkWVEzaFdjVFpqVjIxeVZIaENYRzVoUTJaSFRFb3phaTg1YWxoTlEydEhUMnRVWVVoVWRqbGxjSFV3YkM5MFp6TTVOa3hDU1V4TWFXaG5PVzk2VVZvemJIbHJhemRIT1hoWWNtRkViVzVuWEc1S1RFUTVhM05rTTFoM1MwSm5SV054TDBObVJFaGxZMFZ2V2xaaFFXWkxNelZ2WlhsNFMzSXhTMWNyZERaQlRVbEJaV2huVmtwc1l6bEZjV3h0YUhabFhHNVBlVmg0WkRJMVVqZHRlVXBYWlVSS1lqVktUM1JFYzA5TWNEUm5SWHA0YzJsU05TdFdNbk5WZDNoaU5VUTBTRzlST0VJMk4wdHVWakJrTlROeVZHVnRYRzVuWVVsdmVpczNZMmsxY0habk5VVllOR2xRVTFwMlNWcFNVMk5MYkVST1RUTllSRXAwYldaVWFFZGhUbVE0Um1zNGVFcFhXSFphV2tGdlIwRlpVRTA0WEc1U1dXRlVNakZKTldab2EzcFZZakl2VVdFMlNXSXdNRlpzTXpaTFJ6QlZkRGt6ZGxGNWFESTJNM0pzY25OU1dGSk1jbVkxUXpkUWREaHhURW96YjNWWlhHNVRRbE5EU201V2FHeFhXRGxHWkRZeU1YcG9ibXA1VlZWVGRqQmFiR0ZDTW5wR2VHVkJOalJOU0dzNFFrTjFOWEZqU2pobFVVcEVUVE5MYUM5RVUxaFJYRzVrTmxWWVIwbDFaMGc0VVdVM05qRjJNalZOTlRSWE1rMURRWFpvWjB4c1RTdFVUMDFhVkRoRFoxbENjalY1UjFwaU1sQkdaaXRLYldabVRVMUVORTU2WEc1bGJFcDFTMUpsWXpSaWVscHNORkJHUTFjM09IcEpNaTlEWlRaak9IUm5XR04wT0VwdFRVTTJSMmt4YUVSQ01TOHZabFpJU2pjeFJubFNZakJJWVhWUFhHNVRXSFoyVlhRMU9HRXZMMUJzYzFaVWJHTnVjR0oyVUVWUlJUWTBTalo2VWpsbkswUkxOV2hFT0dvNFVVeFZhRmhrZEhGWVlqVmhVWEE0UXpsek5HNVBYRzVpY1VSUVozVm9MMHRKYVZBMVdTdGhVRTlsYUc1M1BUMWNiaTB0TFMwdFJVNUVJRkJTU1ZaQlZFVWdTMFZaTFMwdExTMWNiaUlzQ2lBZ0ltTnNhV1Z1ZEY5bGJXRnBiQ0k2SUNKNGVIZ3RabUZyWlMxeVpYQnZjblJsY2kxNGVIaEFZMnh2ZFdRdGJXRnlhMlYwY0d4aFkyVXRkRzl2YkhNdWFXRnRMbWR6WlhKMmFXTmxZV05qYjNWdWRDNWpiMjBpTEFvZ0lDSmpiR2xsYm5SZmFXUWlPaUFpTVRBMU9EWXlNRE0zT0RRMU1qazVOekkzT0RJeklpd0tJQ0FpWVhWMGFGOTFjbWtpT2lBaWFIUjBjSE02THk5aFkyTnZkVzUwY3k1bmIyOW5iR1V1WTI5dEwyOHZiMkYxZEdneUwyRjFkR2dpTEFvZ0lDSjBiMnRsYmw5MWNta2lPaUFpYUhSMGNITTZMeTl2WVhWMGFESXVaMjl2WjJ4bFlYQnBjeTVqYjIwdmRHOXJaVzRpTEFvZ0lDSmhkWFJvWDNCeWIzWnBaR1Z5WDNnMU1EbGZZMlZ5ZEY5MWNtd2lPaUFpYUhSMGNITTZMeTkzZDNjdVoyOXZaMnhsWVhCcGN5NWpiMjB2YjJGMWRHZ3lMM1l4TDJObGNuUnpJaXdLSUNBaVkyeHBaVzUwWDNnMU1EbGZZMlZ5ZEY5MWNtd2lPaUFpYUhSMGNITTZMeTkzZDNjdVoyOXZaMnhsWVhCcGN5NWpiMjB2Y205aWIzUXZkakV2YldWMFlXUmhkR0V2ZURVd09TOTRlSGd0Wm1GclpTMXlaWEJ2Y25SbGNpMTRlSGdsTkRCamJHOTFaQzF0WVhKclpYUndiR0ZqWlMxMGIyOXNjeTVwWVcwdVozTmxjblpwWTJWaFkyTnZkVzUwTG1OdmJTSUtmUT09
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/component: auto-provisioned.marketplace.cloud.google.com
+    app.kubernetes.io/name: tsb
+    marketplace.cloud.google.com/auto-provisioned-for-property: reportingSecret
+  name: tsb-reportingsecret
+  namespace: tsb
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: tsb
+    uid: 611d819f-76b9-43e9-a6a7-eec569c5f46c
+type: Opaque
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: auto-provisioned.marketplace.cloud.google.com
+    app.kubernetes.io/name: tsb
+    marketplace.cloud.google.com/auto-provisioned-for-property: service_account
+  name: tsb-serviceaccount
+  namespace: tsb
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: tsb
+    uid: 611d819f-76b9-43e9-a6a7-eec569c5f46c
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: auto-provisioned.marketplace.cloud.google.com
+    app.kubernetes.io/name: tsb
+    marketplace.cloud.google.com/auto-provisioned-for-property: service_account
+  name: tsb:tsb:service_account:cluster-admin-crb
+  namespace: tsb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: tsb-serviceaccount
+  namespace: tsb
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: deployer.marketplace.cloud.google.com
+    app.kubernetes.io/name: tsb
+    marketplace.cloud.google.com/deployer: Dependent
+  name: tsb-deployer-sa
+  namespace: tsb
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: tsb
+    uid: 611d819f-76b9-43e9-a6a7-eec569c5f46c
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/component: deployer.marketplace.cloud.google.com
+    app.kubernetes.io/name: tsb
+    marketplace.cloud.google.com/deployer: Dependent
+  name: tsb-deployer-config
+  namespace: tsb
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: tsb
+    uid: 611d819f-76b9-43e9-a6a7-eec569c5f46c
+stringData:
+  values.yaml: '__image_repo_prefix__: gcr.io/gke-istio-test-psb/tsb-operator
+
+    name: tsb
+
+    namespace: tsb
+
+    reportingSecret: tsb-reportingsecret
+
+    service_account: tsb-serviceaccount
+
+    tsb_password: admin
+
+    '
+type: Opaque
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/component: deployer.marketplace.cloud.google.com
+    app.kubernetes.io/name: tsb
+    marketplace.cloud.google.com/deployer: Main
+  name: tsb-deployer
+  namespace: tsb
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: tsb
+    uid: 611d819f-76b9-43e9-a6a7-eec569c5f46c
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: 'false'
+    spec:
+      containers:
+      - command:
+        - /bin/deploy.sh
+        image: gcr.io/gke-istio-test-psb/tsb-operator/deployer:1.3.0
+        imagePullPolicy: Always
+        name: deployer
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        volumeMounts:
+        - mountPath: /data/values.yaml
+          name: config-volume
+          readOnly: true
+          subPath: values.yaml
+      restartPolicy: Never
+      serviceAccountName: tsb-deployer-sa
+      volumes:
+      - name: config-volume
+        secret:
+          secretName: tsb-deployer-config
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/component: deployer-rbac.marketplace.cloud.google.com
+    app.kubernetes.io/name: tsb
+    marketplace.cloud.google.com/deployer: Dependent
+  name: tsb-deployer-rb
+  namespace: tsb
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: tsb
+    uid: 611d819f-76b9-43e9-a6a7-eec569c5f46c
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: tsb-deployer-sa
+  namespace: tsb
+Using /opt/kubectl/default/kubectl (server=1.21)
+secret/tsb-reportingsecret created
+serviceaccount/tsb-serviceaccount created
+clusterrolebinding.rbac.authorization.k8s.io/tsb:tsb:service_account:cluster-admin-crb unchanged
+serviceaccount/tsb-deployer-sa configured
+secret/tsb-deployer-config created
+job.batch/tsb-deployer created
+rolebinding.rbac.authorization.k8s.io/tsb-deployer-rb created
